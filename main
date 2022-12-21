@@ -1,0 +1,591 @@
+#! /bin/bash
+#Database managment system by @MohamedSalah && @MoustafaMahmoud
+
+
+mkdir DBMS
+clear
+
+echo -e "\e[44mwelcome to DBMS\e[0m"
+echo -e "\e[46mDBMS made by : Mohamed Salah and Moustafa Mahmoud\e[0m"
+
+
+
+function createDB {
+          echo -e "Enter Database Name : "
+          read dbName
+
+	   while ! [[ $dbName =~ ^([a-zA-Z])[a-zA-Z0-9\w_-]*([a-zA-Z0-9])$ ]]
+          do
+                 
+                  echo -e "\e[41mNOTE\e[0m"
+                  echo -e "\e[41mDatabase name should not have any special characters or spaces\e[0m"
+                  createDB
+         done
+	 while [[ -e ./DBMS/$dbName ]]
+                 do
+                         echo -e "\e[41mError\e[0m"
+                         echo -e "This database is already exists"
+                        
+                         createDB
+                 done
+
+	mkdir ./DBMS/$dbName 2>>./.error.log
+	if [[ $? == 0 ]] 
+	then
+	
+		echo -e "\e[42mDataBase $dbName was Successfully Created\e[0m"
+	fi
+	mainMenu
+ } 
+
+ function listDB {
+	 echo "-------------------------------------------------------------"
+	 counter=1
+	for file in DBMS/*
+	do
+		echo $counter"-"$file
+		(( counter ++ ))	
+	done
+	echo "-------------------------------------------------------------"
+	mainMenu
+}
+
+
+
+function dropDB {
+	echo -e "Enter Database Name"
+	read dbName
+	if ! [[ -e ./DBMS/$dbName ]] 
+	then
+		echo -e "\e[41mError\e[0m"
+		echo this Database $dbName is not exist.
+	else
+		rm -r ./DBMS/$dbName 
+		if [[ $? == 0 ]]
+		then
+			echo -e "\e[42mDatabase $dbName was Dropped Successfully\e[0m"
+		fi
+	fi
+	mainMenu
+	
+}
+
+function renameDB {
+	echo "Please enter Name of Your Database you want to Reaname "
+	read db_name
+	while [[ $db_name == "" ]]
+	do
+		echo -e "\e[41mError\e[0m"
+		echo -e "Invalid DataBase."
+		renameDB
+	done
+	while ! [[ -e ./DBMS/$db_name ]]
+	do
+		echo -e "\e[41mError\e[0m"
+                echo -e "this database is not existed."
+		renameDB
+	done 
+	echo "Please enter your Database New Name"
+	read dbNewName
+	while ! [[ $dbNewName =~ ^([a-zA-Z])[a-zA-Z0-9\w_-]*([a-zA-Z0-9])$ ]]
+	do
+		echo -e "\e[41mNOTE\e[0m"
+                echo -e "\e[41mDatabase name should not have any special characters or spaces\e[0m"
+		renameDB
+	done
+	while [[ -e ./DBMS/$dbNewName ]]
+	do
+		echo -e "\e[41mError\e[0m"
+		echo -e "this database is already exists."
+		renameDB
+	done
+	mv ./DBMS/$db_name ./DBMS/$dbNewName 2>>./.error.log
+	if [ $? -eq 0 ]
+	then
+		echo -e "\e[42mDatabase has successfully Renamed\e[0m"
+		mainMenu;
+	else
+		echo "Wrong Database Name"
+		mainMenu;
+	fi
+	
+	mainMenu
+
+}
+
+function useDB {
+  echo "Enter Database Name:"
+  read db_name
+  cd ./DBMS/$db_name 2>>./.error.log
+  if [ $? -eq 0 ]
+  then
+    echo -e "\e[42mDatabase $db_name was Successfully Selected\e[0m"
+    tablesMenu
+  else
+	echo -e "\e[41mError\e[0m"
+    echo "Database $db_name wasn't found"
+   mainMenu 
+  fi
+}
+
+function tablesMenu {
+        echo "---------------------------------------------"
+        echo
+        echo "welcome in Tabels Characteristics"
+        echo
+        echo "please choose from this option"
+        echo
+        echo "  1)  Show Existing tables"
+        echo "  2)  Create table"
+        echo "  3)  Drop table"
+        echo "  4)  Select from table "
+        echo "  5)  Insert into table "
+	echo "  6)  Update Table "
+        echo "  7)  Delete from table "
+        echo "  8)  Back to Main Menu "
+        echo "  9)  Exit"
+        echo "--------------------------------------------"
+
+        read option
+        case $option in
+                1)ls .;tablesMenu;;
+                2)createTable;;
+                3)dropTable;;
+                4)selectFromTable;;
+                5)insert;;
+		6)updateTable;;
+                7)deleteFromTable;;
+                8)clear cd ../.. 2>> ./.error.log;mainMenu;;
+                9)exit;;
+                *) echo -e "\e[41mWrong choice\e[0m"; tablesMenu;;
+        esac
+}
+
+function createTable {
+	echo "Please enter table Name"
+	read tName
+	while ! [[ $tName =~ ^([a-zA-Z])[a-zA-Z0-9\w_-]*([a-zA-Z0-9])$ ]];
+        do
+                echo "$tName is not a valid name";
+		echo -e "\e[41mNOTE\e[0m"
+                echo -e "\e[41mtable names should not have any special characters or spaces\e[0m";
+                echo -e  "\e[41mtables doesn't start with a number or end with a '-'or'_'\e[0m";
+                createTable
+        done
+	if [ -f $tName	]
+	then
+		echo -e "e[41mError\e[0m"
+		echo "Table Already is existed"
+		createTable
+	fi
+	echo "please enter how many columns you want"
+	read colNum
+	while ! [[ $colNum =~ ^[0-9]+$ ]]
+	do
+		echo -e "\e[41mError\e[0m"
+		echo "Invalid coulmn numbers"
+		echo "Enter how many columns you want again"
+		read colNum
+		
+	done	
+	counter=1
+	sep=":"
+	newLine="\n"
+	pk=""
+	metaData="Field"$sep"Type"$sep"pk"
+	while [ $counter -le $colNum ]
+	do
+		echo "Please enter Name of Column No. $counter"
+		read colName
+		while ! [[ $colName =~ ^([a-zA-Z])[a-zA-Z0-9\w_-]*([a-zA-Z0-9])$ ]];
+		do
+			echo "$colName is not a vaild name."
+			echo -e "\e[41mNote\e[0m"
+			echo -e "\e[41mcolumn Name should not start with letters\e[0m"
+			echo -e "\e[41mcolumn name should not have special characters or spaces\e[0m"
+			echo "enter the column name again"
+			read colName
+		done
+		anew=1
+                while [ $anew -eq 1 ]
+                do
+			anew=0
+                        echo "please enter Data Type of colymn No. $colName"
+                        select choice in "str" "int"
+                        do
+                                case $choice in
+                                        str ) colType="str"; break ;;
+                                        int ) colType="int"; break ;;
+					* ) echo -e "\e[41mWrong Choice\e[0m"; anew=1;;
+                                esac
+                        done
+		done
+	bnew=1
+	while [ $bnew -eq 1 ]
+	do
+		bnew=0
+		if [[ $pk == "" ]];
+		then
+	  		echo "Make a Primary Key"
+	  		select var in "yes" "no"
+	  		do
+	          		case $var in
+					yes ) pk="pk";
+					metaData+=$newLine$colName$sep$colType$sep$pk;
+					break;;
+					no ) metaData+=$newLine$colName$sep$colType$sep"";
+					break;;
+					* )	echo -e "\e[41mWrong Choice\e[0m";
+					bnew=1;;
+	    			esac
+	 		 done
+		 	 
+  		else
+			metaData+=$newLine$colName$sep$colType$sep""
+ 	 	fi
+	done
+	 if [[ $counter == $colNum ]]
+	 then
+		 temp=$temp$colName
+	 else
+      		temp=$temp$colName$sep
+	fi
+	((counter++))
+ 	done
+	touch .$tName
+	echo -e $metaData  >> .$tName
+	touch $tName
+	echo -e $temp >> $tName
+	if [[ $? == 0 ]]
+  	then
+    		echo -e "\e[42mTable Created Successfully\e[0m"
+    		tablesMenu
+  	else
+    		echo -e "\e[41mError Creating Table $tName\e[0m"
+    		tablesMenu
+ 	 fi
+
+}
+
+function dropTable {
+  echo -e "Enter Table Name: \c"
+  read tName
+  if ! [[ -e $tName ]]
+  then
+	  echo -e "\e[41mError\e[0m"
+	  echo this table name does not exist.
+  else
+ 	 rm $tName .$tName 2>>./.error.log
+ 	 if [[ $? == 0 ]]
+  	then
+    		echo -e "\e[42mTable Dropped Successfully\e[0m"
+  	else
+
+    		echo -e "\e[41mError Dropping Table $tName\e[0m"
+    
+ 	 fi
+ fi
+  tablesMenu
+}
+
+function insert {
+	echo -e "table Name: \c"
+	read tName
+	if ! [[ -f $tName ]]
+	then
+		echo -e "\e[41mWarning\e[0m"
+		echo this table $tName is not exist.
+		echo choose another table.
+		tablesMenu
+	fi
+	colsNum=`awk 'END{print NR}' .$tName`
+	sep=":"
+	newLine="\n"
+
+	# get the data from the table 
+	for (( index = 2 ; index <= $colsNum ; index++ ));
+	do
+		colName=$(awk 'BEGIN{FS=":"}{ if(NR=='$index') print $1}' .$tName)
+		colType=$(awk 'BEGIN{FS=":"}{ if(NR=='$index') print $2}' .$tName)
+		colKey=$(awk 'BEGIN{FS=":"}{ if(NR=='$index') print $3}' .$tName)
+		echo -e "$colName ($colType) = \c"
+		read data
+	
+
+	# Check data
+	if [[ $colType == "int" ]];
+	then
+		while ! [[ $data =~ ^[1-9]*$ ]]   ;
+			do
+				2>>./.error.log
+				echo -e "\e[41mERROR\e[0m"
+				echo -e "Invalid DataType."
+				echo -e "$colName ($colType) = \c"
+				read data
+			done
+	fi
+	if [[ $colType == "str" ]];
+	then
+		while ! [[ $data =~ ^[a-zA-Z]*$  ]] ;
+		do
+			echo -e "\e[41mERROR\e[0m"
+			echo -e "Invalid DataType."
+			echo -e "$colName ($colType) = \c"
+			read data
+		done
+	fi
+	if [[ $colKey == "pk" ]];
+	then
+		while [[ true ]];
+		do 
+			 if [[ $data =~ ^[`awk 'BEGIN{FS=":" ; ORS=" "}{if(NR != 1)print $(('$index'-1))}' $tName`]$ ]];
+			 then	
+         			 echo -e "\e[41minvalid input for Primary Key !!\e[0m"
+       			 else
+         			 break;
+       			 fi
+       			 echo -e "$colName ($colType) = \c"
+    			read data
+      		done
+	fi
+	if [[ $index == $colsNum ]] ;
+	then
+		row=$row$data$newLine
+	else
+		row=$row$data$sep
+			
+	fi
+		done
+	echo -e $row"\c" >> $tName
+	if [[ $? == 0 ]]
+	then
+		echo -e "\e[42mData Inserted Successfully\e[0m"
+	else
+		echo Error occuring when inserting data into table $tName
+	fi
+	row=""
+	tablesMenu
+
+}
+
+function updateTable {
+
+	echo "Enter Table Name:"
+	read tName
+	while ! [[ -e $tName ]]
+	do
+		echo -e "\e[41mError\e[0m"
+		echo -e "this table name does not exist."
+		echo -e "Enter the table name again."
+		read tName
+	done
+	echo "Enter Column name: "
+	read field
+	fieldIndex=$(awk 'BEGIN{FS=":"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$field'") print i}}}' $tName)
+  if [[ $fieldIndex == "" ]]
+  then
+    echo -e "\e[41mNot Found\e[0m"
+    tablesMenu
+  else
+    echo -e "Enter the condition value that you will modify according to it : \c"
+    read val
+    res=$(awk 'BEGIN{FS=":"}{if ($'$fieldIndex'=="'$val'") print $'$fieldIndex'}' $tName 2>>./.error.log)
+    if [[ $res == "" ]]
+    then
+      echo -e "\e[41mValue Not Found\e[0m"
+      tablesMenu
+    else
+      echo -e "Enter coulmn name to update: \c"
+      read setField
+      setFieldId=$(awk 'BEGIN{FS=":"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$setField'") print i}}}' $tName)
+      if [[ $setFieldId == "" ]]
+      then
+        echo -e "\e[41mNot Found\e[0m"
+        tablesMenu
+      else
+	      echo -e "Enter new Value to update in $tName ($setField): \c"
+        read  newValue
+        NR=$(awk 'BEGIN{FS=":"}{if ($'$fieldIndex' == "'$val'") print NR}' $tName 2>>./.error.log)
+        oldValue=$(awk 'BEGIN{FS=":"}{if(NR=='$NR'){for(i=1;i<=NF;i++){if(i=='$setFieldId') print $i}}}' $tName 2>>./.error.log)
+        echo $oldValue
+        sed -i ''$NR's/'$oldValue'/'$newValue'/g' $tName 2>>./.error.log
+        echo -e "\e[42mRow Updated Successfully\e[0m"
+        tablesMenu
+      fi
+    fi
+  fi
+
+}
+
+function deleteFromTable {
+        echo -e "Enter Table Name: \c"
+  read tName
+  while ! [[ -e $tName ]] 
+  do
+	  echo -e "\e[41mError\e[0m"
+	  echo -e "this table $tName is not exist"
+	  echo -e "Enter the table name again."
+	  read tName 
+  done
+  echo -e "Enter Column name for $tName: \c"
+  read field
+  fid=$(awk 'BEGIN{FS=":"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$field'") print i}}}' $tName)
+  while [[ $fid == "" ]]
+  do
+    echo -e "\e[41mNot Found this Field !!\e[0m"
+    echo -e "Enter the field again."
+    read field
+    done
+  
+    echo -e "Enter Condition Value: \c"
+    read val
+    res=$(awk 'BEGIN{FS=":"}{if ($'$fid'=="'$val'") print $'$fid'}' $tName 2>>./.error.log)
+    if [[ $res == "" ]]
+    then
+      echo -e "\e[41minvalid value !!\e[0m"
+
+      tablesMenu
+    else
+      NR=$(awk 'BEGIN{FS=":"}{if ($'$fid'=="'$val'") print NR}' $tName 2>>./.error.log)
+      sed -i ''$NR'd' $tName 2>>./.error.log
+      echo -e "\e[42mData Deleted Successfully\e[0m"
+
+      tablesMenu
+    fi
+  
+}
+
+function selectFromTable {
+	echo -e "\n\n+---------------Select Menu--------------------+"
+  echo " 1. 	Select All Columns of a Table              "
+  echo " 2. 	Select Specific Column from a Table         "
+  echo " 3. 	Select From Table under condition           "
+  echo " 4.	 Back To Tables Menu                         "
+  echo " 5.	 Back To Main Menu                           "
+  echo " 6.	 Exit                                   "
+  echo
+  echo -e "Enter Choice: \c"
+  read ch
+  case $ch in
+    1) selectAll ;;
+    2) selectCol ;;
+    3) clear; selectCon ;;
+    4) clear; tablesMenu ;;
+    5) clear; cd ../.. 2>>./.error.log; mainMenu ;;
+    6) exit ;;
+    *) echo -e "\e[41mWrong Choice\e[0m" ; selectMenu;
+  esac
+}
+function selectAll {
+echo "Enter Table Name :"
+read TableName
+
+if [ -e $TableName ];then 
+    cat  $TableName 
+    selectFromTable;
+    else 
+    echo -e "\e[41mNo such Table\e[0m"
+fi
+}
+function selectCol {
+  echo -e "Enter Table Name: \c"
+  read tName
+  if [ -e $tName ]
+  then
+  	echo -e "Enter Column Number: \c"
+  	read colNum
+  	awk 'BEGIN{FS=":"}{print $'$colNum'}' $tName
+	if [ $? -ne 0 ]
+	then
+		echo -e "\e[41mColumn Not Exist\e[0m"
+		selectFromTable
+	fi
+  else
+	  echo -e "\e[41mTable Name not exist\e[0m"
+	  selectFromTable
+  fi
+  selectFromTable
+}
+function selectCon {
+  echo -e "\n\n+--------Select Under Condition Menu-----------+"
+  echo
+  echo "	 1. Select All Columns Matching Condition     "
+  echo "	 2. Back To Selection Menu                    "
+  echo " 	 3. Back To Main Menu                         "
+  echo "	 4. Exit                                      "
+  echo
+  echo -e "Enter Choice: \c"
+  read ch
+  case $ch in
+    1) clear; allCond ;;
+    2) clear; selectCon ;;
+    3) clear; cd ../.. 2>>./.error.log; mainMenu ;;
+    4) exit ;;
+    *) echo -e "\e[41mWrong Choice\e[0m" ; selectCon;
+  esac
+}
+function allCond {
+  echo -e "Select all columns from TABLE Where FIELD(OPERATOR)VALUE \n"
+  echo -e "Enter Table Name: \c"
+  read tName
+  if [[ -e $tName ]] 
+  then
+	  echo -e "\e[41mERROR\e[0m"
+	  echo -e "this table is not found"
+	  allCond
+  fi
+
+  echo -e "Enter required FIELD name: \c"
+  read field
+  fid=$(awk 'BEGIN{FS=":"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$field'") print i}}}' $tName)
+  if [[ $fid == "" ]]
+  then
+    echo -e "\e[41mNot Found\[0m"
+    selectCon
+  else
+    echo -e "\nSupported Operators: [==, !=, >, <, >=, <=] \nSelect OPERATOR: \c"
+    read op
+    if [[ $op == "==" ]] || [[ $op == "!=" ]] || [[ $op == ">" ]] || [[ $op == "<" ]] || [[ $op == ">=" ]] || [[ $op == "<=" ]]
+    then
+      echo -e "\nEnter required VALUE: \c"
+      read val
+      res=$(awk 'BEGIN{FS=":"}{if ($'$fid$op$val') print $0}' $tName 2>>./.error.log |  column -t -s ':')
+      if [[ $res == "" ]]
+      then
+        echo -e "\e[41mValue Not Found\e[0m"
+        selectCon
+	else
+        awk 'BEGIN{FS=":"}{if ($'$fid$op$val') print $0}' $tName 2>>./.error.log |  column -t -s ':'
+        selectCon
+      fi
+    else
+      echo "Unsupported Operator\n"
+      selectCon
+    fi
+
+  fi
+}
+function mainMenu {
+
+select choice in CreateDB ListDB RenameDB DropDB UseDB Exit
+do
+        case $choice in
+                CreateDB) createDB
+                        ;;
+                ListDB) listDB
+                        ;;
+                RenameDB) renameDB
+                        ;;
+                DropDB) dropDB
+                        ;;
+                UseDB) useDB
+                        ;;
+                Exit) exit
+                        ;;
+                *) echo -e "\e[41mwrong choice\e[0m"; mainMenu ;;
+
+        esac
+done
+}
+mainMenu
+
